@@ -28,7 +28,7 @@ String password;
 const IPAddress direccionAP = IPAddress(192, 168, 66, 1);
 const IPAddress SUBNET = IPAddress(255, 255, 255, 0);
 String NOMBRERED = "RGBControl";
-String PASWRED = "laluzpapa";
+String PASWRED = "";
   
 ESP8266WebServer server(80);
 //LED Connections
@@ -280,6 +280,9 @@ WiFiEventHandler gotIpEventHandler;
 DNSServer dnsServer;
 
 void setup(){
+
+
+
   Serial.begin(115200);   //Start serial connection  
   EEPROM.begin(512);
   pinMode(RedLED,OUTPUT);
@@ -293,7 +296,7 @@ void setup(){
 
   dnsServer.setTTL(300);
   dnsServer.setErrorReplyCode(DNSReplyCode::ServerFailure);
-  dnsServer.start(53, "luces.local", direccionAP);
+  dnsServer.start(53, "*", direccionAP);
  
   gotIpEventHandler = WiFi.onStationModeGotIP([](const WiFiEventStationModeGotIP& event){      
     //WiFi.softAP(NOMBRERED, PASWRED);     
@@ -359,7 +362,7 @@ void setup(){
   server.on("/getWCONF", handlesendwconf);
   server.on("/seeconfig", handlesendwconf);
   server.on("/req", handlereq);
-  server.onNotFound(handleRoot)
+  server.onNotFound(handleRoot);
   server.begin();                           //Start server
   
   banderaserver=true;
@@ -449,6 +452,7 @@ void loop(){
     T2V=0;
  
   if( (tactual-tinicial)>12500 ){
+      Serial.println(bandera);
       resetinicial=true;
       contador++;
       if(bandera==4){//el flashaso
@@ -484,9 +488,8 @@ void loop(){
 
 
 
-
+float factB = 4 * brillo;
 void variacionlenta(){
-  
     if( banderaslash==0){
         r=r+10;
         if(r>=230){
@@ -524,15 +527,18 @@ void variacionlenta(){
            banderaslash++;
            banderaslash=0;
       }
+
+    
     }
 
    /*
   Serial.print("Red:");Serial.println(r);
   Serial.print("Green:");Serial.println(g);
   Serial.print("Blue:");Serial.println(b);
-  analogWrite(RedLED,r * 4 * brillo);
-  analogWrite(GreenLED,g * 4 * brillo);
-  analogWrite(BlueLED,b  * 4 * brillo);*/
+  */
+  analogWrite(RedLED,r * factB);   // factB = 4 * brillo
+  analogWrite(GreenLED,g * factB);
+  analogWrite(BlueLED,b  * factB);
   }
 
 int vectr[] = {255,255,0  ,255,0  ,0  };
@@ -553,9 +559,9 @@ void variacionfuerte(){
   Serial.print("Green:");Serial.println(g);
   Serial.print("Blue:");Serial.println(b);
   */
-  analogWrite(RedLED,r * 4 * brillo);
-  analogWrite(GreenLED,g * 4 * brillo);
-  analogWrite(BlueLED,b  * 4 * brillo);
+  analogWrite(RedLED,r * factB);   //factB = 4 * brillo
+  analogWrite(GreenLED,g * factB);
+  analogWrite(BlueLED,b  * factB);
 }
 
 
@@ -571,18 +577,18 @@ void flashaso(){
         r=255;
         b=150;
         g=255;
-        analogWrite(RedLED,r * 4 * brillo);
-        analogWrite(GreenLED,g * 4 * brillo);
-        analogWrite(BlueLED,b  * 4 * brillo);
+        analogWrite(RedLED,r * factB);    //factB = 4 * brillo
+        analogWrite(GreenLED,g * factB);
+        analogWrite(BlueLED,b  * factB);
         estadoflash=true;
     }
   else{
         r=0;
         b=0;
         g=0;
-        analogWrite(RedLED,r * 4 * brillo);
-        analogWrite(GreenLED,g * 4 * brillo);
-        analogWrite(BlueLED,b  * 4 * brillo);
+        analogWrite(RedLED,r * factB);   
+        analogWrite(GreenLED,g * factB);
+        analogWrite(BlueLED,b  * factB);
         estadoflash=false;
     contflash++;
     }
@@ -602,15 +608,24 @@ void variacionvariada(){
   Serial.print("Green:");Serial.println(g);
   Serial.print("Blue:");Serial.println(b);
   */
-  analogWrite(RedLED,r * 4 * brillo);
-  analogWrite(GreenLED,g * 4 * brillo);
-  analogWrite(BlueLED,b  * 4 * brillo);
+  analogWrite(RedLED,r * factB);    //factB = 4 * brillo
+  analogWrite(GreenLED,g * factB);
+  analogWrite(BlueLED,b  * factB);
 }
 
 int contdesvan = 1;
-int vectfact[] = {20, 20, 19, 19, 18, 18, 17, 17, 16, 16, 15, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 5, 4, 4, 3, 3, 2, 1, 0}; 
+int vectfact[] = {20, 20, 19, 19, 18, 18, 17, 17, 16, 16, 15, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 5, 4, 4, 3, 3, 2, 1, 1}; 
+constexpr float Fvectfact[] = {
+    20 * 0.05f, 20 * 0.05f, 19 * 0.05f, 19 * 0.05f, 
+    18 * 0.05f, 18 * 0.05f, 17 * 0.05f, 17 * 0.05f, 
+    16 * 0.05f, 16 * 0.05f, 15 * 0.05f, 15 * 0.05f, 
+    14 * 0.05f, 13 * 0.05f, 12 * 0.05f, 11 * 0.05f, 
+    10 * 0.05f,  9 * 0.05f,  8 * 0.05f,  7 * 0.05f, 
+     6 * 0.05f,  5 * 0.05f,  5 * 0.05f,  4 * 0.05f, 
+     4 * 0.05f,  3 * 0.05f,  3 * 0.05f,  2 * 0.05f, 
+     1 * 0.05f,  1 * 0.05f};
 int VECTFLENG = 30;
- void desvanvariado(){
+void desvanvariado(){
     contdesvan++;
     if(contdesvan>=VECTFLENG){  //Posiblemente haya que limitar a menos el 10
      contdesvan=0;
@@ -618,10 +633,16 @@ int VECTFLENG = 30;
     }
     if(indexvect>=DIMENSIONVECT2)
       indexvect=0;
-    r = vectr2[indexvect]*(0.05*vectfact[contdesvan]);
-    g = vectg2[indexvect]*(0.05*vectfact[contdesvan]);
-    b = vectb2[indexvect]*(0.05*vectfact[contdesvan]);
-  analogWrite(RedLED,  r * 4 );
-  analogWrite(GreenLED,g * 4 );
-  analogWrite(BlueLED, b * 4 );
+    /*
+    float fact = (0.05*vectfact[contdesvan]);
+    r = vectr2[indexvect]*fact;
+    g = vectg2[indexvect]*fact;
+    b = vectb2[indexvect]*fact;*/
+    r = vectr2[indexvect]*Fvectfact[contdesvan];
+    g = vectg2[indexvect]*Fvectfact[contdesvan];
+    b = vectb2[indexvect]*Fvectfact[contdesvan];
+    
+  analogWrite(RedLED,  r * factB ); //factB = 4 * brillo
+  analogWrite(GreenLED,g * factB );
+  analogWrite(BlueLED, b * factB );
 } 

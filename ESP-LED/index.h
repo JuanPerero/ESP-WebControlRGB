@@ -190,7 +190,7 @@ function setbrillo(){
     <a class="barras"> //</a>
     <a  href=/setSLASH class="site-desc"> Variacion suave</a>
     <a class="barras"> //</a>
-    <a  href=/setLUZ class="site-desc">  Intensidad</a> 
+    <a  href=/setLUZ?I=10 class="site-desc">  Restablecer brillo</a> 
  </section>
  <section style="height: 10%;width: 80%; margin: auto;">
     <a class="barras"> //</a>
