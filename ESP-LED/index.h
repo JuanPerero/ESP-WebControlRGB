@@ -97,9 +97,9 @@ b{
 
 <script>
 function mandarRGB(){
-  var valr = document.getElementById('rojo').value;
-  var valg = document.getElementById('verde').value;
-  var valb = document.getElementById('azul').value; 
+  var valr = encodeURIComponent(parseInt(document.getElementById('rojo').value, 10)); 
+  var valg = encodeURIComponent(parseInt(document.getElementById('verde').value, 10)); 
+  var valb = encodeURIComponent(parseInt(document.getElementById('azul').value, 10)); 
   changeColor(valr,valg,valb);
   var texto = "Seteado "+valr+"-"+valg+"-"+valb;
   document.getElementById("resp").innerHTML = texto;
@@ -157,8 +157,9 @@ function PalCol()
   document.getElementById("azul").value = hexToRgb(ColorHex).b;
 }
 
-function setbrillo(){
-  var brillo = document.getElementById("I").value;  
+function setbrillo(value){
+  const labels = ['10', '9', '7', '6', '5', '4', '2'];
+  var brillo = labels[value];
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
      if (this.readyState == 4 && this.status == 200) {
@@ -190,7 +191,7 @@ function setbrillo(){
     <a class="barras"> //</a>
     <a  href=/setSLASH class="site-desc"> Variacion suave</a>
     <a class="barras"> //</a>
-    <a  href=/setLUZ?I=10 class="site-desc">  Restablecer brillo</a> 
+    <a  href=/setLUZ?I=5 class="site-desc">  Restablecer brillo</a> 
  </section>
  <section style="height: 10%;width: 80%; margin: auto;">
     <a class="barras"> //</a>
@@ -227,7 +228,7 @@ function setbrillo(){
 
 
       <!--  Este es el boton     -->
-    <!--section style="display: inline-block;"-->
+    <!--section style="display: inline-block;"-->veccolores
       <section class="Toques" id="Inf0" style="position: absolute; top: 85%; left:10%;width: 60%;height: 7%; display: inline-block; font-size: 2vh;" onclick="panelRGB();" onmouseover="style.backgroundColor='#949494'" onmouseout="style.backgroundColor='#747474'"><font color="#333333">Mandar Color</font></section>
          <p id="resp" style="color: blanchedalmond;position: absolute; top: 100%; left:9%;width: 60%;height: 7%; display: inline-block;"> </p>
     <!--/section-->
@@ -263,7 +264,7 @@ function setbrillo(){
     
     <div id="inten" style="position: absolute; width: 40%; height: 10%; left: 5%; top: 70%">
     <a class="site-desc" style="position: absolute; left:5% ;top: 20%"> Intensidad </a>
-    <input id="I" name="I" type="range" min="0" max="10" step="1" style="position: absolute;width: 60%;height: 20%;left: 40%;top: 35%;" onchange="setbrillo(this.value)">
+    <input id="I" name="I" type="range" min="0" max="6" step="1" style="position: absolute;width: 60%;height: 20%;left: 40%;top: 35%;" onchange="setbrillo(this.value)">
     </div>
 
 

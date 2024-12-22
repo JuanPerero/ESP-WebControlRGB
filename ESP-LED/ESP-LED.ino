@@ -5,10 +5,9 @@
 extern "C" {
 #include "user_interface.h"
 }
-ADC_MODE(ADC_TOUT);
+//ADC_MODE(ADC_TOUT);
 //ADC_MODE(ADC_VCC);
- 
- 
+  
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <DNSServer.h>
@@ -39,9 +38,13 @@ const int BlueLED = 5; // D1
 const int RedLED = 4;    // D2
 const int GreenLED = 0; // D3
 
-int vectr2[] = {255,255,255,255, 255,0  ,0  ,0  ,0  ,0  ,0  ,75 ,125,180,255};
-int vectg2[] = {0  ,75 ,125,180, 255,255,255,255,255,255,0  ,0  ,0  ,0  ,0  };
-int vectb2[] = {0  ,0  ,0  ,0  ,0   ,0  ,75 ,125,180,255,255,255,255,255,255};
+//int vectr2[] = {255,255,255,255, 255,0  ,0  ,0  ,0  ,0  ,0  ,75 ,125,180,255};
+//int vectg2[] = {0  ,75 ,125,180, 255,255,255,255,255,255,0  ,0  ,0  ,0  ,0  };
+//int vectb2[] = {0  ,0  ,0  ,0  ,0   ,0  ,75 ,125,180,255,255,255,255,255,255};
+int vectr2[] = {1020,1020,1020,1020, 1020,0  ,0  ,0  ,0  ,0  ,0  ,300 ,500,720,1020};
+int vectg2[] = {0  ,300 ,500,720, 1020,1020,1020,1020,1020,1020,0  ,0  ,0  ,0  ,0  };
+int vectb2[] = {0  ,0  ,0  ,0  ,0   ,0  ,300 ,500,720,1020,1020,1020,1020,1020,1020};
+
 int DIMENSIONVECT2=15;
 
 
@@ -50,7 +53,7 @@ int DIMENSIONVECT2=15;
 //                    Parametros globales
 //=======================================================================
 // Intensidad
-float brillo=1;
+int brillo=5;
 int bandera=0;
 int recuperarband;
 int r, g, b;
@@ -94,20 +97,15 @@ void handleForm() {
   String red = server.arg("r");
   String green = server.arg("g");
   String blue = server.arg("b");
-  //int r = red.toInt() * brillo;
-  //int g = green.toInt() * brillo;
-  //int b = blue.toInt() * brillo;
-  r = red.toInt() * brillo;
-  g = green.toInt() * brillo;
-  b = blue.toInt() * brillo;
-  Serial.print("Red:");Serial.println(r);
-  Serial.print("Green:");Serial.println(g);
-  Serial.print("Blue:");Serial.println(b);
-  
-  //PWM Correction 8-bit to 10-bit
-  r = r * 4; 
-  g = g * 4;
-  b = b * 4;
+
+  r = red.toInt();
+  g = green.toInt();
+  b = blue.toInt();
+
+  //PWM Correction 8-bit to 10-bit // Ya realizado sobre javascript
+  //r = r * 4; 
+  //g = g * 4;
+  //b = b * 4;
   //for ULN2003 or Common Cathode RGB Led not needed
   /*
   r = 1024 - r;
@@ -115,9 +113,9 @@ void handleForm() {
   b = 1024 - b;
   */
   //ESP supports analogWrite All IOs are PWM
-  analogWrite(RedLED,r);
-  analogWrite(GreenLED,g);
-  analogWrite(BlueLED,b);
+  analogWrite(RedLED,r   >> brillo);
+  analogWrite(GreenLED,g >> brillo);
+  analogWrite(BlueLED,b  >> brillo);
   server.sendHeader("Location", "/");
   server.send(302, "text/html", "Updated-- Press Back Button");
  
@@ -126,19 +124,8 @@ void handleForm() {
 
 
 void handleinten(){
-   
   String inten = server.arg("I");
-  float aux = inten.toInt(); 
-  aux = aux/10;
-  if(aux >= 0 && aux <= 1)
-    brillo = aux;
-    
-    /*
-    brillo=brillo-0.1;
-    if(brillo<=0)
-      brillo=1;
-    String inten = (String) brillo;
-    */
+  brillo = inten.toInt(); 
   server.send(302, "text/html", "<p>Configurado en I= "+ inten +"</p>");
  }
 
@@ -188,9 +175,9 @@ void handlevariado(){
     int index = server.arg("ind").toInt();
     Serial.println(index); 
     if(index==15){
-      analogWrite(RedLED,  1024);
-      analogWrite(GreenLED, 1024);
-      analogWrite(BlueLED, 1024);
+      analogWrite(RedLED,  1024  >> brillo);
+      analogWrite(GreenLED, 1024 >> brillo);
+      analogWrite(BlueLED, 1024  >> brillo);
         Serial.println("BLANCO");
     }else if(index==16){
       analogWrite(RedLED,  0);
@@ -199,12 +186,9 @@ void handlevariado(){
       Serial.println("NEGRO");
     }
     else{
-    analogWrite(RedLED,  4* vectr2[index]);
-    analogWrite(GreenLED,4* vectg2[index]);
-    analogWrite(BlueLED, 4* vectb2[index]);
-    Serial.println(vectr2[index]);
-    Serial.println(vectg2[index]);
-    Serial.println(vectb2[index]);
+    analogWrite(RedLED,  vectr2[index]  >> brillo);
+    analogWrite(GreenLED,vectg2[index]  >> brillo);
+    analogWrite(BlueLED, vectb2[index]  >> brillo);
     }
   server.sendHeader("Location", "/");
   server.send(302, "text/html", "<p> Actualizado </p>");
@@ -295,7 +279,7 @@ void setup(){
   WiFi.softAP(NOMBRERED);
 
   dnsServer.setTTL(300);
-  dnsServer.setErrorReplyCode(DNSReplyCode::ServerFailure);
+  //dnsServer.setErrorReplyCode(DNSReplyCode::ServerFailure);
   dnsServer.start(53, "*", direccionAP);
  
   gotIpEventHandler = WiFi.onStationModeGotIP([](const WiFiEventStationModeGotIP& event){      
@@ -368,12 +352,7 @@ void setup(){
   banderaserver=true;
   Serial.println("HTTP server started");
   analogWriteFreq(100);
-  //analogWriteFreq(40000);
 
-  
-  analogWrite(RedLED,150);
-  analogWrite(GreenLED,150);
-  analogWrite(BlueLED,150);
   Serial.println(T2V);
   T1C=0b10000010;
 
@@ -433,7 +412,7 @@ bool resetinicial=true;
 
 
 void loop(){
-  dnsServer.processNextRequest();
+  //dnsServer.processNextRequest();
   MDNS.update();
   server.handleClient();
   //if(tiempo>8000){  //se traba en 8578, seguro por desbordamiento del timer (2 a la 27)
@@ -452,7 +431,6 @@ void loop(){
     T2V=0;
  
   if( (tactual-tinicial)>12500 ){
-      Serial.println(bandera);
       resetinicial=true;
       contador++;
       if(bandera==4){//el flashaso
@@ -481,49 +459,45 @@ void loop(){
      }
       
     }
-    // Sensado de tension
-    //float voltaje = analogRead(A0);
-    //Serial.print(voltaje);
 }
 
 
 
-float factB = 4 * brillo;
 void variacionlenta(){
     if( banderaslash==0){
-        r=r+10;
-        if(r>=230){
+        r=r+40;
+        if(r>=940){
            banderaslash++;
         }
       }
     else if(banderaslash==1){
-      b=b-10;
-      if(b<=10){
+      b=b-40;
+      if(b<=40){
            banderaslash++;
       }
     }
     else if( banderaslash==2){
-        g=g+10;
-        if(g>=230){
+        g=g+40;
+        if(g>=940){
            banderaslash++;
         }
       }
     else if(banderaslash==3){
-      r=r-10;
-      if(r<=10){
+      r=r-40;
+      if(r<=40){
            banderaslash++;
       }
     }
 
     else if( banderaslash==4){
-        b=b+10;
-        if(b>=230){
+        b=b+40;
+        if(b>=940){
            banderaslash++;
         }
       }
     else if(banderaslash==5){
-      g=g-10;
-      if(g<=10){
+      g=g-40;
+      if(g<=40){
            banderaslash++;
            banderaslash=0;
       }
@@ -531,19 +505,14 @@ void variacionlenta(){
     
     }
 
-   /*
-  Serial.print("Red:");Serial.println(r);
-  Serial.print("Green:");Serial.println(g);
-  Serial.print("Blue:");Serial.println(b);
-  */
-  analogWrite(RedLED,r * factB);   // factB = 4 * brillo
-  analogWrite(GreenLED,g * factB);
-  analogWrite(BlueLED,b  * factB);
+  analogWrite(RedLED,r >> brillo); 
+  analogWrite(GreenLED,g >> brillo);
+  analogWrite(BlueLED,b >> brillo);
   }
 
-int vectr[] = {255,255,0  ,255,0  ,0  };
-int vectg[] = {0  ,255,0  ,0  ,255,255};
-int vectb[] = {0  ,0  ,255,255,0  ,255};
+int vectr[] = {1020,1020,0  ,1020,0  ,0  };
+int vectg[] = {0  ,1020,0  ,0  ,1020,1020};
+int vectb[] = {0  ,0  ,1020,1020,0  ,1020};
 int indexvect = 0;
 int DIMENSIONVECT = 6;
 
@@ -554,14 +523,10 @@ void variacionfuerte(){
   r = vectr[indexvect];
   g = vectg[indexvect];
   b = vectb[indexvect];
-  /*
-  Serial.print("Red:");Serial.println(r);
-  Serial.print("Green:");Serial.println(g);
-  Serial.print("Blue:");Serial.println(b);
-  */
-  analogWrite(RedLED,r * factB);   //factB = 4 * brillo
-  analogWrite(GreenLED,g * factB);
-  analogWrite(BlueLED,b  * factB);
+
+  analogWrite(RedLED,r    >> brillo);
+  analogWrite(GreenLED,g  >> brillo);
+  analogWrite(BlueLED,b   >> brillo);
 }
 
 
@@ -574,21 +539,18 @@ void flashaso(){
     auxflash=false;
     
   if(estadoflash==false){
-        r=255;
-        b=150;
-        g=255;
-        analogWrite(RedLED,r * factB);    //factB = 4 * brillo
-        analogWrite(GreenLED,g * factB);
-        analogWrite(BlueLED,b  * factB);
+        r=1020;
+        b=600;
+        g=1020;
+        analogWrite(RedLED,r   >> brillo);
+        analogWrite(GreenLED,g >> brillo);
+        analogWrite(BlueLED,b  >> brillo);
         estadoflash=true;
     }
   else{
-        r=0;
-        b=0;
-        g=0;
-        analogWrite(RedLED,r * factB);   
-        analogWrite(GreenLED,g * factB);
-        analogWrite(BlueLED,b  * factB);
+        analogWrite(RedLED,  0);   
+        analogWrite(GreenLED,0);
+        analogWrite(BlueLED, 0);
         estadoflash=false;
     contflash++;
     }
@@ -603,18 +565,15 @@ void variacionvariada(){
   r = vectr2[indexvect];
   g = vectg2[indexvect];
   b = vectb2[indexvect];
-  /*
-  Serial.print("Red:");Serial.println(r);
-  Serial.print("Green:");Serial.println(g);
-  Serial.print("Blue:");Serial.println(b);
-  */
-  analogWrite(RedLED,r * factB);    //factB = 4 * brillo
-  analogWrite(GreenLED,g * factB);
-  analogWrite(BlueLED,b  * factB);
+
+  analogWrite(RedLED,r   >> brillo);
+  analogWrite(GreenLED,g >> brillo);
+  analogWrite(BlueLED,b  >> brillo);
 }
 
 int contdesvan = 1;
-int vectfact[] = {20, 20, 19, 19, 18, 18, 17, 17, 16, 16, 15, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 5, 4, 4, 3, 3, 2, 1, 1}; 
+/*
+int   [] = {20, 20, 19, 19, 18, 18, 17, 17, 16, 16, 15, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 5, 4, 4, 3, 3, 2, 1, 1}; 
 constexpr float Fvectfact[] = {
     20 * 0.05f, 20 * 0.05f, 19 * 0.05f, 19 * 0.05f, 
     18 * 0.05f, 18 * 0.05f, 17 * 0.05f, 17 * 0.05f, 
@@ -624,6 +583,30 @@ constexpr float Fvectfact[] = {
      6 * 0.05f,  5 * 0.05f,  5 * 0.05f,  4 * 0.05f, 
      4 * 0.05f,  3 * 0.05f,  3 * 0.05f,  2 * 0.05f, 
      1 * 0.05f,  1 * 0.05f};
+*/
+/*
+int matriz_valores[5][8] = {
+        {1020, 969, 918, 867, 816, 765, 714, 663},
+        {720, 684, 648, 612, 576, 540, 504, 468},
+        {500, 475, 450, 425, 400, 375, 350, 325},
+        {300, 285, 270, 255, 240, 225, 210, 195},
+        {  0,   0,   0,   0,   0,   0,   0,   0}
+    };
+*/
+
+
+int matriz_valores[5][30] = {
+  //int {  20,  20,  19,  19,  18,  18,  17,  17,  16,  16,  15,  15,  14,  13,  12,  11,  10,   9,   8,   7,   6,   5,   5,   4,   4,   3,   3,   2,   1,  1}; 
+        {1020,1020, 969, 969, 918, 918, 867, 867, 816, 816, 765, 765, 714, 663, 612, 561, 510, 459, 408, 357, 306, 255, 255, 204, 204, 153, 153, 102,  51, 51},
+        { 720, 720, 684, 684, 648, 648, 612, 612, 576, 576, 540, 540, 504, 468, 432, 396, 360, 324, 288, 252, 216, 180, 180, 144, 144, 108, 108,  72,  36, 36},
+        { 500, 500, 475, 475, 450, 450, 425, 425, 400, 400, 375, 375, 350, 325, 300, 275, 250, 225, 200, 175, 150, 125, 125, 100, 100,  75,  75, 50,   25, 25},
+        { 300, 300, 285, 285, 270, 270, 255, 255, 240, 240, 225, 225, 210, 195, 180, 165, 150, 135, 120, 105,  90,  75,  75,  60,  60,  45,  45, 30,   15, 15},
+        {   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0}
+    };
+byte vectr3[] = {0,0,0,0,0,4,4,4,4,4,4,3,2,1,0};
+byte vectg3[] = {4,3,2,1,0,0,0,0,0,0,4,4,4,4,4};
+byte vectb3[] = {4,4,4,4,4,4,3,2,1,0,0,0,0,0,0};
+
 int VECTFLENG = 30;
 void desvanvariado(){
     contdesvan++;
@@ -633,16 +616,11 @@ void desvanvariado(){
     }
     if(indexvect>=DIMENSIONVECT2)
       indexvect=0;
-    /*
-    float fact = (0.05*vectfact[contdesvan]);
-    r = vectr2[indexvect]*fact;
-    g = vectg2[indexvect]*fact;
-    b = vectb2[indexvect]*fact;*/
-    r = vectr2[indexvect]*Fvectfact[contdesvan];
-    g = vectg2[indexvect]*Fvectfact[contdesvan];
-    b = vectb2[indexvect]*Fvectfact[contdesvan];
+    r = matriz_valores[vectr3[indexvect]][contdesvan];
+    g = matriz_valores[vectg3[indexvect]][contdesvan];
+    b = matriz_valores[vectb3[indexvect]][contdesvan];
     
-  analogWrite(RedLED,  r * factB ); //factB = 4 * brillo
-  analogWrite(GreenLED,g * factB );
-  analogWrite(BlueLED, b * factB );
+  analogWrite(RedLED,  r >> brillo);
+  analogWrite(GreenLED,g >> brillo);
+  analogWrite(BlueLED, b >> brillo);
 } 
